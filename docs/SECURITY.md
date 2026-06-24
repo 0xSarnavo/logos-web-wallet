@@ -71,6 +71,30 @@ piling up. ✅
 - Upgrade path to clear them: migrate to **Next 16 + React 19** (re-test required).
   Re-audit before any non-localhost deployment.
 
+## Multi-user custodial mode (added)
+
+The app also has a custodial multi-user mode (auth + per-user sealed keys). Its
+security model:
+
+- **Passwords:** Argon2id login hash; never stored in plaintext (verified at rest
+  as `$argon2id$...`).
+- **Key at rest:** each user's wallet `storage.json` + CLI password are sealed with
+  **AES-256-GCM** under a **KEK = Argon2id(password + server PEPPER, per-user salt)**.
+  The KEK is derived per request and never persisted. Verified: DB holds ciphertext
+  only — no plaintext `sk`, no recovery phrase, no `recovery_phrase` column.
+- **Recovery phrase:** shown once at signup, never stored (recovery = none by design).
+- **Send requires the password every time** — the KEK is not cached in the session
+  (session holds only user id/email). Wrong password → AES-GCM rejects → **no spend**.
+- **Rate limiting:** login 10/5min/IP, register 5/hr/IP, send 20/5min/user (in-memory;
+  move to Redis for multi-instance).
+- **Proving throttle:** `PROOF_CONCURRENCY` caps concurrent (heavy) proofs.
+- **Audit log:** every auth/wallet action recorded (no secrets).
+
+**Residual custodial risk (inherent):** during a send the server briefly holds the
+decrypted key in memory — a compromised server could capture it then. Custodial is
+never as safe as non-custodial. `WALLET_PEPPER` must be kept secret and stable
+(losing/changing it makes all stored keys undecryptable). See `docs/PRD.md`.
+
 ## Hardening checklist if you ever expose this beyond localhost
 - [ ] Add authentication (at minimum a shared secret / session) to all `POST` routes.
 - [ ] Add CSRF protection (the write routes are simple JSON POSTs).
