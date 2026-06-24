@@ -7,6 +7,7 @@ export const config = {
   walletBackend: (process.env.WALLET_BACKEND ?? "cli") as "cli" | "sequencer",
   walletBin: process.env.WALLET_BIN ?? "wallet",
   walletHome: process.env.WALLET_HOME || undefined,
+  walletHomesDir: process.env.WALLET_HOMES_DIR || undefined,
   proofTimeoutSeconds: Number(process.env.PROOF_TIMEOUT_SECONDS ?? "600"),
 };
 
