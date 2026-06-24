@@ -1,0 +1,55 @@
+# Multi-user custodial wallet — local full stack.
+#
+#   docker compose -f docker-compose.multiuser.yml up -d --build
+#   → UI at http://localhost:3344
+#
+# Services: the wallet UI + Postgres. The Logos node and LEZ sequencer are
+# EXTERNAL (point the env at yours). The `wallet` CLI + circuits must be present
+# in the UI image for write features — see docs/RAILWAY-DEPLOY.md.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devpass}
+      POSTGRES_DB: logos_wallet
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  wallet-ui:
+    build: .
+    image: logos-wallet:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3344:3344"
+    environment:
+      DATABASE_URL: "postgres://postgres:${DB_PASSWORD:-devpass}@postgres:5432/logos_wallet"
+      # >=32 random chars each. NEVER commit real values; pass via env / secrets.
+      SESSION_SECRET: "${SESSION_SECRET:?set SESSION_SECRET (>=32 chars)}"
+      WALLET_PEPPER: "${WALLET_PEPPER:?set WALLET_PEPPER (>=32 chars)}"
+      # External chain endpoints.
+      NODE_API: "${NODE_API:-http://host.docker.internal:8080}"
+      SEQUENCER_API: "${SEQUENCER_API:-http://host.docker.internal:3040}"
+      WALLET_BIN: "/usr/local/bin/wallet"
+      WALLET_HOMES_DIR: "/data/homes"
+      PROOF_TIMEOUT_SECONDS: "600"
+    volumes:
+      - homes:/data/homes
+      # Provide a LINUX wallet binary + circuits for write features:
+      # - /path/to/linux/wallet:/usr/local/bin/wallet:ro
+      # - ${HOME}/.logos-blockchain-circuits:/root/.logos-blockchain-circuits:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  homes:

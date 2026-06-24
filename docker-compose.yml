@@ -1,0 +1,38 @@
+# Self-host the Logos Wallet UI.
+#
+#   docker compose up -d --build      → UI at http://localhost:3344
+#
+# The UI talks to a Logos node (reads) and the LEZ wallet CLI + sequencer
+# (writes). Point the env vars below at yours.
+services:
+  wallet-ui:
+    build: .
+    image: logos-wallet:latest
+    ports:
+      # Bind to localhost only — this UI drives a key-holding CLI and has no auth.
+      # Change to "0.0.0.0:3344:3344" ONLY behind your own auth/proxy. See docs/SECURITY.md.
+      - "127.0.0.1:3344:3344"
+    environment:
+      # Reads: chain status + balances. host.docker.internal = your machine's node.
+      NODE_API: "http://host.docker.internal:8080"
+      # Writes: the LEZ sequencer.
+      SEQUENCER_API: "http://host.docker.internal:3040"
+      # How write ops run: "cli" shells out to the `wallet` binary below.
+      WALLET_BACKEND: "cli"
+      WALLET_BIN: "/usr/local/bin/wallet"
+      # Per-instance wallet home (config + storage.json) lives on a volume.
+      WALLET_HOME: "/data/wallet-home"
+      PROOF_TIMEOUT_SECONDS: "600"
+    volumes:
+      - wallet-home:/data/wallet-home
+      # ── To enable write features (create/transfer/faucet) ──────────────────
+      # The `wallet` binary must be a LINUX build (the container is Linux).
+      # Mount a Linux-built binary + the circuits it needs, then uncomment:
+      # - /path/to/linux/wallet:/usr/local/bin/wallet:ro
+      # - ${HOME}/.logos-blockchain-circuits:/root/.logos-blockchain-circuits:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+volumes:
+  wallet-home:
