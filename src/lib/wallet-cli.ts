@@ -31,7 +31,9 @@ export interface CliResult {
 function run(args: string[], timeoutMs: number): Promise<CliResult> {
   return new Promise((resolve) => {
     const env = { ...process.env };
-    if (config.walletHome) env.NSSA_WALLET_HOME = config.walletHome;
+    // The CLI requires LEE_WALLET_HOME_DIR to point at a dir holding wallet_config.json
+    // + storage.json. In multi-user mode this is set per-request to the user's home.
+    if (config.walletHome) env.LEE_WALLET_HOME_DIR = config.walletHome;
 
     let child;
     try {
@@ -139,8 +141,11 @@ export function assertSafeMention(value: string): string {
   if (!v) throw new MentionError("account id is required");
   if (v.length > 256) throw new MentionError("account id is too long");
   if (v.startsWith("-")) throw new MentionError("account id may not start with '-'");
-  // base58, slashes (privacy prefix / key path), word chars, dot/colon for labels.
-  if (!/^[1-9A-HJ-NP-Za-km-z/_.:-]+$/.test(v)) {
+  // spawn runs WITHOUT a shell, so shell metacharacters are not a risk; the only
+  // residual risk is argument injection (leading '-', handled above). Allow the
+  // chars a real mention uses: "Public/"/"Private/" prefixes (note: "Public"
+  // contains 'l', which is outside base58), base58 ids, labels, and key paths.
+  if (!/^[A-Za-z0-9/_.:-]+$/.test(v)) {
     throw new MentionError("account id contains invalid characters");
   }
   return v;
