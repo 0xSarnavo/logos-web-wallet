@@ -6,36 +6,91 @@
   color-scheme: dark;
 }
 
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
 body {
-  @apply bg-bg text-white antialiased;
+  @apply bg-bg text-white;
+  background-image: radial-gradient(transparent, transparent); /* placeholder, no gradient */
 }
 
-.card {
-  @apply rounded-xl border border-border bg-panel p-5;
+::selection {
+  background: #3a3a42;
+  color: #fff;
 }
 
-.label {
-  @apply mb-1 block text-xs font-medium uppercase tracking-wide text-muted;
+/* Thin, unobtrusive scrollbar. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2c2c32;
+  border-radius: 9999px;
+  border: 2px solid #0e0e10;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a42;
 }
 
-.input {
-  @apply w-full rounded-lg border border-border bg-panel2 px-3 py-2 font-mono text-sm
-    text-white outline-none placeholder:text-muted/60 focus:border-accent;
-}
+@layer components {
+  .card {
+    @apply rounded-2xl border border-border bg-panel p-6;
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  }
 
-.btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm
-    font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
-}
+  .label {
+    @apply mb-1.5 block text-[11px] font-medium uppercase tracking-[0.12em] text-muted;
+  }
 
-.btn-primary {
-  @apply btn bg-accent text-white hover:bg-accent/90;
-}
+  .input {
+    @apply h-11 w-full rounded-xl border border-border bg-panel2 px-3.5 text-sm text-white
+      outline-none transition placeholder:text-muted/50
+      focus:border-muted focus:ring-2 focus:ring-white/5;
+  }
+  textarea.input {
+    @apply h-auto py-3;
+  }
 
-.btn-ghost {
-  @apply btn border border-border bg-panel2 text-white hover:border-accent;
-}
+  .btn {
+    @apply inline-flex h-11 select-none items-center justify-center gap-2 rounded-xl px-4
+      text-sm font-semibold transition-all duration-150 active:scale-[0.99]
+      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/15
+      disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-bg hover:bg-white;
+  }
+  .btn-solid {
+    @apply btn border border-white/5 bg-[#2a2a30] text-white hover:bg-[#34343c];
+  }
+  .btn-ghost {
+    @apply btn border border-border bg-panel2/60 text-white hover:border-muted hover:bg-panel2;
+  }
+  /* Compact square icon/action button. */
+  .btn-icon {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border
+      bg-panel2/60 text-muted transition-all hover:border-muted hover:text-white
+      active:scale-95 disabled:opacity-40;
+  }
+  .btn-xs {
+    @apply h-8 rounded-lg px-3 text-xs;
+  }
 
-.pill {
-  @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+  /* Monospace chip for addresses / codes. */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-border bg-panel2/60
+      px-2.5 py-1 font-mono text-xs text-muted;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/5 px-2.5 py-1
+      text-[11px] font-medium;
+  }
+
+  .balance {
+    @apply font-mono text-3xl font-semibold tabular-nums tracking-tight text-ok;
+  }
 }

@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen font-mono">{children}</body>
+      <body className="min-h-screen font-sans">{children}</body>
     </html>
   );
 }
